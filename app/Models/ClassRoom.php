@@ -7,29 +7,30 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
-class ParentModel extends Model
+class ClassRoom extends Model
 {
     use HasFactory;
 
-    protected $table = 'parents';
+    protected $table = 'classes';
 
     protected $fillable = [
-        'user_id',
         'name',
-        'gender',
-        'phone',
-        'email',
-        'address',
-        'photo',
+        'grade',
+        'room',
+        'teacher_id',
     ];
 
-    public function user(): BelongsTo
+    protected $casts = [
+        'teacher_id' => 'integer',
+    ];
+
+    public function teacher(): BelongsTo
     {
-        return $this->belongsTo(User::class);
+        return $this->belongsTo(\App\Models\Teacher::class, 'teacher_id');
     }
 
     public function students(): HasMany
     {
-        return $this->hasMany(Student::class, 'parent_id');
+        return $this->hasMany(\App\Models\Student::class);
     }
 }
