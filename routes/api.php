@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ClassController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\SubjectController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -18,6 +20,8 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
+        Route::apiResource('classes', ClassController::class);
+        Route::apiResource('subjects', SubjectController::class);
 
         Route::get('/admin/test', function () {
             return response()->json([
