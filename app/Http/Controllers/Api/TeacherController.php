@@ -10,7 +10,7 @@ class TeacherController extends Controller
 {
     /**
      * GET /api/teachers
-     * Display all teachers.
+     * Get all teachers.
      */
     public function index()
     {
@@ -37,7 +37,7 @@ class TeacherController extends Controller
             'email' => 'nullable|email|max:150',
             'address' => 'nullable|string',
             'photo' => 'nullable|string|max:255',
-            'status' => 'nullable|string|max:30',
+            'status' => 'sometimes|string|max:30',
         ]);
 
         $teacher = Teacher::create($validated);
@@ -51,7 +51,7 @@ class TeacherController extends Controller
 
     /**
      * GET /api/teachers/{id}
-     * Display one teacher.
+     * Get one teacher by ID.
      */
     public function show(string $id)
     {
@@ -94,7 +94,7 @@ class TeacherController extends Controller
             'email' => 'nullable|email|max:150',
             'address' => 'nullable|string',
             'photo' => 'nullable|string|max:255',
-            'status' => 'nullable|string|max:30',
+            'status' => 'sometimes|string|max:30',
         ]);
 
         $teacher->update($validated);
