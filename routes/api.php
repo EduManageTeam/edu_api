@@ -1,7 +1,9 @@
 <?php
 
 use App\Http\Controllers\Api\AuthController;
+use App\Http\Controllers\Api\ParentController;
 use App\Http\Controllers\Api\RoleController;
+use App\Http\Controllers\Api\TeacherController;
 use App\Http\Controllers\Api\UserController;
 use App\Http\Controllers\StudentController;
 use Illuminate\Support\Facades\Route;
@@ -27,6 +29,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/register', [AuthController::class, 'register']);
         Route::apiResource('users', UserController::class);
         Route::apiResource('roles', RoleController::class);
+
+        // Lyhai - Teacher & Parent Management
+        Route::apiResource('teachers', TeacherController::class);
+        Route::apiResource('parents', ParentController::class);
 
         Route::get('/admin/test', function () {
             return response()->json([
