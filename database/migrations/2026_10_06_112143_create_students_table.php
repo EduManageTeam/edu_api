@@ -12,25 +12,21 @@ return new class extends Migration
     public function up(): void
     {
         Schema::create('students', function (Blueprint $table) {
-            $table->integer('id')->autoIncrement()->primary();
+            $table->increments('id');
             $table->string('name');
             $table->string('gender');
             $table->date('date_of_birth')->nullable();
             $table->string('phone');
             $table->text('address')->nullable();
             $table->string('photo')->nullable();
-            $table->integer('class_id');
-            $table->integer('parent_id')->nullable();
+            $table->unsignedInteger('class_id');
+            $table->unsignedInteger('parent_id')->nullable();
             $table->string('status')->nullable();
             $table->timestamps();
 
             $table->foreign('class_id')
                 ->references('id')
                 ->on('classes');
-
-            $table->foreign('parent_id')
-                ->references('id')
-                ->on('parents');
         });
     }
 

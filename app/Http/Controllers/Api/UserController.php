@@ -19,21 +19,56 @@ class UserController extends Controller
         return new UserResourceCollection($users);
     }
 
+
     public function store(Request $request)
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
             'email' => 'required|string|email|max:150|unique:users,email',
             'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:8|max:255',
-            'role_id' => ['required', 'integer', Rule::exists('roles', 'id')],
+            'password' => 'nullable|string|min:8|max:255',
+            'role_id' => [
+                'required',
+                'integer',
+                Rule::exists('roles', 'id')
+            ],
         ]);
 
+        // Get selected role
+        $role = Role::findOrFail($validated['role_id']);
+
+        // Default passwords
+        $defaultPasswords = [
+            'teacher' => 'Teacher@123',
+            'student' => 'Student@123',
+            'parent'  => 'Parent@123',
+        ];
+
+        $roleName = strtolower(trim($role->name));
+
+        // Assign default password if password is not provided
+        if (empty($validated['password'])) {
+
+            if (!isset($defaultPasswords[$roleName])) {
+                return response()->json([
+                    'message' => 'Password is required for this role.'
+                ], 422);
+            }
+
+            $validated['password'] = $defaultPasswords[$roleName];
+        }
+
+        // Hash password
         $validated['password'] = Hash::make($validated['password']);
 
+        // Create user
         $user = User::create($validated);
-        return (new UserResource($user->load('role')))->response()->setStatusCode(201);
+
+        return (new UserResource($user->load('role')))
+            ->response()
+            ->setStatusCode(201);
     }
+
 
     public function show(string $id)
     {

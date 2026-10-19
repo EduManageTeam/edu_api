@@ -14,7 +14,6 @@ return new class extends Migration
             $table->string('grade', 50);
             $table->string('room')->nullable();
             $table->unsignedInteger('teacher_id')->nullable();
-            $table->foreign('teacher_id')->references('id')->on('teachers')->cascadeOnDelete();
             $table->timestamps();
             $table->softDeletes();
         });

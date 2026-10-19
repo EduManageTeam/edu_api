@@ -23,5 +23,10 @@ class RoleSeeder extends Seeder
             'name' => 'parent',
             'description' => 'Parent access',
         ]);
+
+        Role::create([
+            'name' => 'student',
+            'description' => 'Student access',
+        ]);
     }
 }
