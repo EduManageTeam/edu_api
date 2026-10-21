@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Attendance;
-use App\Models\ClassRoom;
 use App\Models\Student;
 use Illuminate\Database\Seeder;
 
@@ -11,10 +10,9 @@ class AttendanceSeeder extends Seeder
 {
     public function run(): void
     {
-        $students = Student::pluck('id')->toArray();
-        $classes = ClassRoom::pluck('id')->toArray();
+        $students = Student::all();
 
-        if (empty($students) || empty($classes)) {
+        if ($students->isEmpty()) {
             return;
         }
 
@@ -24,10 +22,12 @@ class AttendanceSeeder extends Seeder
         $date = now()->subDays(9)->startOfDay();
 
         for ($i = 0; $i < 10; $i++) {
+            $student = $students->random();
+
             Attendance::firstOrCreate(
                 [
-                    'student_id' => $students[array_rand($students)],
-                    'class_id' => $classes[array_rand($classes)],
+                    'student_id' => $student->id,
+                    'class_id' => $student->class_id,
                     'date' => $date->copy()->addDays($i)->format('Y-m-d'),
                 ],
                 [

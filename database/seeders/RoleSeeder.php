@@ -9,24 +9,18 @@ class RoleSeeder extends Seeder
 {
     public function run(): void
     {
-        Role::create([
-            'name' => 'admin',
-            'description' => 'Full system access',
-        ]);
+        $roles = [
+            ['name' => 'admin', 'description' => 'Full system access'],
+            ['name' => 'teacher', 'description' => 'Teacher access'],
+            ['name' => 'parent', 'description' => 'Parent access'],
+            ['name' => 'student', 'description' => 'Student access'],
+        ];
 
-        Role::create([
-            'name' => 'teacher',
-            'description' => 'Teacher access',
-        ]);
-
-        Role::create([
-            'name' => 'parent',
-            'description' => 'Parent access',
-        ]);
-
-        Role::create([
-            'name' => 'student',
-            'description' => 'Student access',
-        ]);
+        foreach ($roles as $role) {
+            Role::updateOrCreate(
+                ['name' => $role['name']],
+                ['description' => $role['description']]
+            );
+        }
     }
 }
