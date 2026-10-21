@@ -45,11 +45,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
         // Only Admin can delete
         Route::delete('/students/{id}', [StudentController::class, 'destroy']);
-        Route::delete('/attendance/{id}', [AttendanceController::class, 'destroy']);
+        Route::delete('/attendance/{attendance}', [AttendanceController::class, 'destroy']);
 
         // Admin can update students and attendance
         Route::patch('/students/{id}', [StudentController::class, 'update']);
-        Route::patch('/attendance/{id}', [AttendanceController::class, 'update']);
+        Route::patch('/attendance/{attendance}', [AttendanceController::class, 'update']);
 
         Route::get('/admin/test', function () {
             return response()->json([
@@ -71,8 +71,8 @@ Route::middleware('auth:sanctum')->group(function () {
         // Attendance
         Route::get('/attendance', [AttendanceController::class, 'index']);
         Route::post('/attendance', [AttendanceController::class, 'store']);
-        Route::get('/attendance/{id}', [AttendanceController::class, 'show']);
-        Route::put('/attendance/{id}', [AttendanceController::class, 'update']);
+        Route::get('/attendance/{attendance}', [AttendanceController::class, 'show']);
+        Route::put('/attendance/{attendance}', [AttendanceController::class, 'update']);
     });
 
     
