@@ -1,9 +1,9 @@
 <?php
 
-namespace App\Http\Controllers;
+namespace App\Http\Controllers\Api;
 
-use App\Models\attendance;
-use App\Models\Attendance as ModelsAttendance;
+use App\Http\Controllers\Controller;
+use App\Models\Attendance;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -73,8 +73,17 @@ class AttendanceController extends Controller
     /**
      * Display the specified resource.
      */
-    public function show(Attendance $attendance)
+    public function show(string $id)
     {
+        $attendance = Attendance::find($id);
+
+        if (!$attendance) {
+            return response()->json([
+                'message' => 'Data Not Found',
+                'status' => 404,
+            ], 404);
+        }
+
         return response()->json([
             'data' => $attendance->load([
                 'student',
@@ -86,8 +95,17 @@ class AttendanceController extends Controller
     /**
      * Update the specified resource in storage.
      */
-     public function update(Request $request, Attendance $attendance)
+     public function update(Request $request, string $id)
     {
+        $attendance = Attendance::find($id);
+
+        if (!$attendance) {
+            return response()->json([
+                'message' => 'Data Not Found',
+                'status' => 404,
+            ], 404);
+        }
+
         $validated = $request->validate([
             'student_id' => ['sometimes', 'required', 'integer',
                 Rule::exists('students', 'id'),
@@ -134,9 +152,19 @@ class AttendanceController extends Controller
     /**
      * Remove the specified resource from storage.
      */
-    public function destroy(attendance $attendance)
+    public function destroy(string $id)
     {
+        $attendance = Attendance::find($id);
+
+        if (!$attendance) {
+            return response()->json([
+                'message' => 'Data Not Found',
+                'status' => 404,
+            ], 404);
+        }
+
         $attendance->delete();
+
         return response()->json([
             'message' => 'Attendance deleted successfully',
         ]);

@@ -16,6 +16,8 @@ class ClassRoomResource extends JsonResource
             'room' => $this->room,
             'teacher_id' => $this->teacher_id,
             'teacher' => $this->whenLoaded('teacher'),
+            'students' => $this->whenLoaded('students'),
+            'students_count' => $this->whenCounted('students'),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

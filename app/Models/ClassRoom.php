@@ -31,6 +31,6 @@ class ClassRoom extends Model
 
     public function students(): HasMany
     {
-        return $this->hasMany(\App\Models\Student::class);
+        return $this->hasMany(\App\Models\Student::class, 'class_id');
     }
 }
