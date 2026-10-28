@@ -12,16 +12,73 @@ class TeacherController extends Controller
      * GET /api/teachers
      * Get all teachers.
      */
-    public function index()
+
+    public function index(Request $request)
     {
-        $teachers = Teacher::all();
+        // VALIDATE SEARCH AND FILTER
+        $validated = $request->validate([
+            'search' => 'nullable|string|max:100',
+            'status' => 'nullable|in:active,inactive',
+        ]);
+
+        $query = Teacher::query();
+
+        // SEARCH TEACHERS
+        if (!empty($validated['search'])) {
+            $search = trim($validated['search']);
+
+            $query->where(function ($q) use ($search) {
+
+                // search by name
+                $q->whereRaw(
+                    'LOWER(name) LIKE ?',
+                    ['%' . strtolower($search) . '%']
+                );
+
+                // search phone number
+                $q->orWhere('phone', 'LIKE', "%{$search}%");
+
+                // Search by database ID
+                if (ctype_digit($search)) {
+                    $q->orWhere('id', (int) $search);
+                }
+            });
+        }
+
+
+
+        // filter teacher
+        if (!empty($validated['status'])) {
+            $query->where('status', $validated['status']);
+        }
+
+        // get all matching teeacher
+        $teachers = $query
+            ->orderBy('id', 'desc')
+            ->get();
+
+        // count all teacher
+        // COUNT MATCHING TEACHERS (SEARCH + FILTER)
+        $stats = [
+            'assigned' => $teachers->count(),
+
+            'on_duty' => $teachers
+                ->where('status', 'active')
+                ->count(),
+
+            'on_leave' => $teachers
+                ->where('status', 'inactive')
+                ->count(),
+        ];
 
         return response()->json([
             'message' => 'Success',
             'status' => 200,
             'data' => $teachers,
+            'stats' => $stats,
         ], 200);
     }
+
 
     /**
      * POST /api/teachers
