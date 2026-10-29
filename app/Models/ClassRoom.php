@@ -29,8 +29,9 @@ class ClassRoom extends Model
         return $this->belongsTo(\App\Models\Teacher::class, 'teacher_id');
     }
 
+    // class has many students
     public function students(): HasMany
     {
-        return $this->hasMany(\App\Models\Student::class);
+        return $this->hasMany(Student::class, 'class_id');
     }
 }

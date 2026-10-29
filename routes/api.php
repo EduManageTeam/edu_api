@@ -56,6 +56,12 @@ Route::middleware('auth:sanctum')->group(function () {
                 'message' => 'Admin API Access'
             ]);
         });
+
+        // Only admin can reset user teacher password
+        Route::patch(
+            'teachers/{teacher}/reset-password',
+            [TeacherController::class, 'resetPassword']
+        );
     });
 
 
