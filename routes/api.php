@@ -1,4 +1,3 @@
-
 <?php
 
 use App\Http\Controllers\Api\AuthController;
@@ -57,10 +56,16 @@ Route::middleware('auth:sanctum')->group(function () {
             ]);
         });
 
-        // Only admin can reset user teacher password
+        // Only admin can reset teacher password
         Route::patch(
             'teachers/{teacher}/reset-password',
             [TeacherController::class, 'resetPassword']
+        );
+
+        // only admin can reset parent paasword
+        Route::patch(
+            'parents/{id}/reset-password',
+            [ParentController::class, 'resetPassword']
         );
     });
 
@@ -81,7 +86,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::put('/attendance/{id}', [AttendanceController::class, 'update']);
     });
 
-    
+
     // TEACHER ONLY
     Route::middleware('teacher')->group(function () {
 
@@ -107,8 +112,6 @@ Route::middleware('auth:sanctum')->group(function () {
         });
     });
 
-
-
     // PARENT ONLY
     Route::middleware('parent')->group(function () {
         Route::get('/parent/test', function () {
@@ -130,20 +133,20 @@ Route::middleware('auth:sanctum')->group(function () {
             ]);
         });
     });
-});
 
-// STUDENT ONLY
-Route::middleware('student')->group(function () {
-    Route::get('/student/test', function () {
-        return response()->json([
-            'message' => 'Student API Access'
-        ]);
-    });
-    Route::get('/student/profile', function (Request $request) {
-        $user = $request->user();
-        return response()->json([
-            'user' => $user
-        ]);
+    // STUDENT ONLY
+    Route::middleware(['student'])->group(function () {
+        Route::get('/student/test', function () {
+            return response()->json([
+                'message' => 'Student API Access'
+            ]);
+        });
+        Route::get('/student/profile', function (Request $request) {
+            $user = $request->user();
+            return response()->json([
+                'user' => $user
+            ]);
+        });
     });
 
 });

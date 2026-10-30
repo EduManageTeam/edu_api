@@ -59,10 +59,49 @@ class TeacherController extends Controller
 
         // get all matching teeacher
         $teachers = $query
+            ->with([
+                'user:id,u_id',
+                'classes' => function ($query) {
+                    $query
+                        ->withCount('students')
+                        ->orderBy('grade')
+                        ->orderBy('name');
+                },
+            ])
             ->orderBy('id', 'desc')
             ->get();
 
-        // count all teacher
+        // Format complete teacher information
+        $data = $teachers->map(function ($teacher) {
+
+            $classes = $teacher->classes->map(function ($class) {
+                return [
+                    'id' => $class->id,
+                    'name' => $class->name,
+                    'grade' => $class->grade,
+                    'room' => $class->room,
+                    'students_count' => (int) $class->students_count,
+                ];
+            })->values();
+
+            return [
+                'id' => $teacher->id,
+                'user_id' => $teacher->user_id,
+                'login_id' => $teacher->user?->u_id,
+                'name' => $teacher->name,
+                'gender' => $teacher->gender,
+                'phone' => $teacher->phone,
+                'email' => $teacher->email,
+                'address' => $teacher->address,
+                'photo' => $teacher->photo,
+                'status' => $teacher->status,
+                'joined_at' => $teacher->created_at,
+                'classes_count' => $classes->count(),
+                'students_count' => (int) $classes->sum('students_count'),
+                'classes' => $classes,
+            ];
+        })->values();
+
         // COUNT MATCHING TEACHERS (SEARCH + FILTER)
         $stats = [
             'assigned' => $teachers->count(),
@@ -79,16 +118,10 @@ class TeacherController extends Controller
         return response()->json([
             'message' => 'Success',
             'status' => 200,
-            'data' => $teachers,
+            'data' => $data,
             'stats' => $stats,
         ], 200);
     }
-
-
-    /**
-     * POST /api/teachers
-     * Create a new teacher.
-     */
 
     /**
      * POST /api/teachers
@@ -134,10 +167,10 @@ class TeacherController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'] ?? null,
                 'phone' => $validated['phone'] ?? null,
-                'password' => Hash::make('teacher@123'),
+                'password' => Hash::make('Teacher@123'),
                 'role_id' => $role->id,
             ]);
-    
+
             // Create teacher linked to the user
             $teacher = Teacher::create([
                 'user_id' => $user->id,
