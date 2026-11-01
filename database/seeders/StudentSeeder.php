@@ -20,10 +20,10 @@ class StudentSeeder extends Seeder
 
         $genders = ['Male', 'Female'];
         $statuses = ['active', 'inactive'];
-        $firstNames = ['Sopheak', 'Srey', 'Rachana', 'Sovanna', 'Chanty', 'Thida', 'Meng', 'Piseth', 'Reaksmey', 'Sitha'];
-        $lastNames = ['Van', 'Kim', 'Pen', 'Lam', 'Heng', 'Chhea', 'Som', 'Yem', 'Nuon', 'Khema'];
+        $firstNames = ['Sopheak', 'Srey', 'Rachana', 'Sovanna', 'Chanty', 'Thida', 'Meng', 'Piseth', 'Reaksmey', 'Sitha', 'Dara', 'Bopha', 'Kosal', 'Sokha', 'Nary', 'Vanna', 'Ratanak', 'Sreymom', 'Chantha', 'Pisey'];
+        $lastNames = ['Van', 'Kim', 'Pen', 'Lam', 'Heng', 'Chhea', 'Som', 'Yem', 'Nuon', 'Khema', 'Ouk', 'Sok', 'Chea', 'Ly', 'Phan', 'Keo', 'Ros', 'Touch', 'Mean', 'Chan'];
 
-        for ($i = 0; $i < 10; $i++) {
+        for ($i = 0; $i < 20; $i++) {
             Student::firstOrCreate(
                 ['name' => $firstNames[$i] . ' ' . $lastNames[$i]],
                 [

@@ -4,8 +4,7 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration
-{
+return new class extends Migration {
     /**
      * Run the migrations.
      */
@@ -16,17 +15,21 @@ return new class extends Migration
             $table->string('name');
             $table->string('gender');
             $table->date('date_of_birth')->nullable();
-            $table->string('phone');
+            $table->string('phone', 20);
             $table->text('address')->nullable();
-            $table->string('photo')->nullable();
+            $table->longText('photo')->nullable();
             $table->unsignedInteger('class_id');
             $table->unsignedInteger('parent_id')->nullable();
-            $table->string('status')->nullable();
+            $table->string('status')->default('active');
             $table->timestamps();
 
             $table->foreign('class_id')
                 ->references('id')
                 ->on('classes');
+            $table->foreign('parent_id')
+                ->references('id')
+                ->on('parents')
+                ->nullOnDelete();
         });
     }
 
