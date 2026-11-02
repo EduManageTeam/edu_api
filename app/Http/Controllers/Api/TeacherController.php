@@ -10,6 +10,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 
 class TeacherController extends Controller
 {
@@ -17,7 +18,6 @@ class TeacherController extends Controller
      * GET /api/teachers
      * Get all teachers.
      */
-
     public function index(Request $request)
     {
         // VALIDATE SEARCH AND FILTER
@@ -34,13 +34,13 @@ class TeacherController extends Controller
 
             $query->where(function ($q) use ($search) {
 
-                // search by name
+                // Search by name
                 $q->whereRaw(
                     'LOWER(name) LIKE ?',
                     ['%' . strtolower($search) . '%']
                 );
 
-                // search phone number
+                // Search phone number
                 $q->orWhere('phone', 'LIKE', "%{$search}%");
 
                 // Search by database ID
@@ -50,14 +50,12 @@ class TeacherController extends Controller
             });
         }
 
-
-
-        // filter teacher
+        // Filter teacher
         if (!empty($validated['status'])) {
             $query->where('status', $validated['status']);
         }
 
-        // get all matching teeacher
+        // Get all matching teachers
         $teachers = $query
             ->with([
                 'user:id,u_id',
@@ -139,12 +137,20 @@ class TeacherController extends Controller
             'phone' => 'nullable|string|max:20',
             'email' => 'nullable|email|max:150|unique:users,email',
             'address' => 'nullable|string',
-            'photo' => 'nullable|string|max:255',
+
+            // PHOTO: Accept Base64 image
+            'photo' => 'nullable|string',
+
             'status' => [
                 'sometimes',
                 Rule::in(['active', 'inactive']),
             ],
         ]);
+
+        // PHOTO: Validate and normalize Base64
+        $validated['photo'] = $this->validateBase64Photo(
+            $validated['photo'] ?? null
+        );
 
         // Find Teacher role
         $role = Role::whereRaw(
@@ -196,7 +202,6 @@ class TeacherController extends Controller
             'login_id' => $teacher->user?->u_id,
         ], 201);
     }
-
 
     /**
      * GET /api/teachers/{id}
@@ -287,12 +292,23 @@ class TeacherController extends Controller
             'phone' => 'sometimes|nullable|string|max:20',
             'email' => 'sometimes|nullable|email|max:150',
             'address' => 'sometimes|nullable|string',
+
+            // PHOTO: Allow updating or removing Base64 photo
+            'photo' => 'sometimes|nullable|string',
+
             'status' => [
                 'sometimes',
                 'required',
                 Rule::in(['active', 'inactive']),
             ],
         ]);
+
+        // PHOTO: Validate only if included in request
+        if (array_key_exists('photo', $validated)) {
+            $validated['photo'] = $this->validateBase64Photo(
+                $validated['photo']
+            );
+        }
 
         // Update teacher
         $teacher->update($validated);
@@ -380,5 +396,61 @@ class TeacherController extends Controller
             'status' => 200,
             'data' => null,
         ], 200);
+    }
+
+    /**
+     * PHOTO: Validate and normalize Base64 image.
+     * Same implementation as StudentController.
+     */
+    private function validateBase64Photo(?string $base64): ?string
+    {
+        if ($base64 === null || $base64 === '') {
+            return null;
+        }
+
+        // Remove data URI prefix if present
+        if (str_contains($base64, ',')) {
+            $base64 = explode(',', $base64, 2)[1];
+        }
+
+        $imageData = base64_decode($base64, true);
+
+        if ($imageData === false) {
+            throw ValidationException::withMessages([
+                'photo' => ['Invalid Base64 image.'],
+            ]);
+        }
+
+        // Maximum decoded image size: 2 MB
+        if (strlen($imageData) > 2 * 1024 * 1024) {
+            throw ValidationException::withMessages([
+                'photo' => ['Photo must not exceed 2 MB.'],
+            ]);
+        }
+
+        $imageInfo = @getimagesizefromstring($imageData);
+
+        if ($imageInfo === false) {
+            throw ValidationException::withMessages([
+                'photo' => ['Invalid image file.'],
+            ]);
+        }
+
+        $allowedTypes = [
+            'image/jpeg',
+            'image/png',
+            'image/webp',
+        ];
+
+        if (!in_array($imageInfo['mime'], $allowedTypes, true)) {
+            throw ValidationException::withMessages([
+                'photo' => [
+                    'Only JPG, PNG and WEBP images are allowed.',
+                ],
+            ]);
+        }
+
+        // Return normalized Base64 for database storage
+        return base64_encode($imageData);
     }
 }

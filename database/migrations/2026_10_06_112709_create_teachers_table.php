@@ -25,7 +25,7 @@ return new class extends Migration
             $table->string('phone', 20)->nullable();
             $table->string('email', 150)->nullable();
             $table->text('address')->nullable();
-            $table->string('photo', 255)->nullable();
+            $table->longText('photo')->nullable();
             $table->string('status', 30)->default('active');
 
             $table->timestamps();
