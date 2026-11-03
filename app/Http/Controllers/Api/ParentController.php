@@ -14,19 +14,21 @@ use Illuminate\Validation\Rule;
 class ParentController extends Controller
 {
 
-
     /**
      * GET /api/parents
      * Get all parents with linked students.
      */
     public function index(Request $request)
     {
+        $totalStart = microtime(true);
+
         // Validate search and filter
         $validated = $request->validate([
             'search' => 'nullable|string|max:100',
             'filter' => 'nullable|in:linked,unlinked',
         ]);
 
+        // Parent query
         $query = ParentModel::query();
 
         // Search parents
@@ -41,7 +43,7 @@ class ParentController extends Controller
                 );
 
                 // Search by phone
-                $q->orWhere('phone', 'LIKE', "%{$search}%");
+                $q->orWhere('phone', 'LIKE', '%' . $search . '%');
 
                 // Search by database ID
                 if (ctype_digit($search)) {
@@ -50,7 +52,7 @@ class ParentController extends Controller
             });
         }
 
-        // Filter parents
+        // Filter linked and unlinked parents
         if (!empty($validated['filter'])) {
             if ($validated['filter'] === 'linked') {
                 $query->has('students');
@@ -59,7 +61,10 @@ class ParentController extends Controller
             }
         }
 
-        // Get parent data
+        // Measure database query time
+        $queryStart = microtime(true);
+
+        // Eager load relationships to prevent N+1 queries
         $parents = $query
             ->with([
                 'user:id,u_id',
@@ -69,9 +74,29 @@ class ParentController extends Controller
             ->orderBy('id', 'desc')
             ->get();
 
-        $data = $parents->map(function ($parent) {
+        $queryMs = round(
+            (microtime(true) - $queryStart) * 1000,
+            2
+        );
 
+        // Calculate statistics
+        $linked = 0;
+        $unlinked = 0;
+
+        // Format parent data
+        $data = $parents->map(function ($parent) use (&$linked, &$unlinked) {
+
+            $childrenCount = (int) $parent->students_count;
+
+            if ($childrenCount > 0) {
+                $linked++;
+            } else {
+                $unlinked++;
+            }
+
+            // Linked children
             $children = $parent->students->map(function ($student) {
+
                 $class = $student->studentClass;
 
                 return [
@@ -88,13 +113,22 @@ class ParentController extends Controller
                         'room' => $class->room,
                     ] : null,
                 ];
-
             })->values();
+
+            // Unique classes count
+            $classesCount = $parent->students
+                ->pluck('class_id')
+                ->filter(function ($id) {
+                    return $id !== null;
+                })
+                ->unique()
+                ->count();
 
             return [
                 'id' => $parent->id,
                 'user_id' => $parent->user_id,
                 'login_id' => $parent->user?->u_id,
+
                 'name' => $parent->name,
                 'gender' => $parent->gender,
                 'phone' => $parent->phone,
@@ -103,38 +137,46 @@ class ParentController extends Controller
                 'photo' => $parent->photo,
                 'joined_at' => $parent->created_at,
 
-                'children_count' => (int) $parent->students_count,
-
-                'classes_count' => $parent->students
-                    ->pluck('class_id')
-                    ->filter(fn($id) => $id !== null)
-                    ->unique()
-                    ->count(),
-
+                'children_count' => $childrenCount,
+                'classes_count' => $classesCount,
                 'children' => $children,
             ];
         })->values();
 
-        // Count matching parents
+        // Statistics
         $stats = [
             'total' => $parents->count(),
-
-            'linked' => $parents
-                ->where('students_count', '>', 0)
-                ->count(),
-
-            'unlinked' => $parents
-                ->where('students_count', 0)
-                ->count(),
+            'linked' => $linked,
+            'unlinked' => $unlinked,
         ];
 
-        return response()->json([
+        // Maintain existing API response format
+        $response = response()->json([
             'message' => 'Success',
             'status' => 200,
             'data' => $data,
             'stats' => $stats,
         ], 200);
+
+        // Measure controller execution time
+        $totalMs = round(
+            (microtime(true) - $totalStart) * 1000,
+            2
+        );
+
+        // Laravel performance log
+        // \Illuminate\Support\Facades\Log::info(
+        //     'PARENT INDEX PERFORMANCE',
+        //     [
+        //         'parents' => $parents->count(),
+        //         'query_ms' => $queryMs,
+        //         'total_ms' => $totalMs,
+        //     ]
+        // );
+
+        return $response;
     }
+
 
     /**
      * POST /api/parents
